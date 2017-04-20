@@ -2,6 +2,8 @@
 import os
 
 ALLOWED_TYPES = (int, float, str, bool, dict)
+TRUTHY_VALUES = ('T', 'True', 'true', 'TRUE', 'Y', 'YES', 'Yes', 'yes', '1',)
+FALSY_VALUES = ('F', 'False', 'false', 'FALSE', 'N', 'NO', 'No', 'no', '0', '')
 
 
 class IncompatibleTypeError(TypeError):
@@ -13,6 +15,16 @@ def build_name(key, prefix, force_uppercase, separator):
         key = key.upper() if force_uppercase else key
         prefix = prefix.upper() if force_uppercase else prefix
         return key if not prefix else '{}{}{}'.format(prefix, separator, key)
+
+
+def parse_bool(value):
+    if value in TRUTHY_VALUES:
+        return True
+
+    if value in FALSY_VALUES:
+        return False
+
+    raise ValueError('Cannot convert "{}" to bool.'.format(value))
 
 
 def validate_types(key, value):
@@ -44,7 +56,10 @@ def load_from_environment(proto, prefix='', force_uppercase=True, separator='_')
                 continue
 
             envvalue = os.environ[varname]
-            envvalue = value_type(envvalue)
+            if value_type is bool:
+                envvalue = parse_bool(envvalue)
+            else:
+                envvalue = value_type(envvalue)
 
             result[key] = envvalue
 
