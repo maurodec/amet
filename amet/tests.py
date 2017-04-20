@@ -4,7 +4,8 @@ import os
 from unittest import TestCase
 
 from .amet import IncompatibleTypeError
-from .amet import build_name, dump, load_from_environment
+from .amet import build_name, dump, load_from_environment, parse_bool
+from .amet import FALSY_VALUES, TRUTHY_VALUES
 
 
 class BuildNameTestCase(TestCase):
@@ -25,6 +26,20 @@ class BuildNameTestCase(TestCase):
 
         key = build_name('key', 'prefix', True, '+')
         self.assertEqual(key, 'PREFIX+KEY')
+
+
+class ParseBoolTestCase(TestCase):
+    def test_truthy_values(self):
+        for tv in TRUTHY_VALUES:
+            self.assertTrue(parse_bool(tv))
+
+    def test_falsy_values(self):
+        for fv in FALSY_VALUES:
+            self.assertFalse(parse_bool(fv))
+
+    def test_unparseable(self):
+        with self.assertRaises(ValueError):
+            parse_bool('not_bool')
 
 
 class DumpTestCase(TestCase):
@@ -104,13 +119,13 @@ class LoadTestCase(TestCase):
         expected = {
             'A': 'a',
             'B': 1,
-            'C': True,
+            'C': False,
             'D': 1.25
         }
         os.environ = {
             'A': 'a',
             'B': '1',
-            'C': 'True',
+            'C': 'False',
             'D': '1.25'
         }
 
