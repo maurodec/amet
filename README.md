@@ -13,11 +13,17 @@ This means that you do not need to give up the benefits of using a JSON file (or
 
 Install the library with a simple `pip install amet`.
 
-### Loading
+### Loading - The `load_from_environment` function
 
 In order to load configuration values from environment variables, the `load_from_environment` function is provided. It expects a dictionary, `proto`, as its first argument and optionally two strings, `prefix` and `separator`, and a boolean value, `force_uppercase`. This function will iterate over `proto` and read environment variables that can be used to fill it.
 
-The environment variables that will be read are expected to have a particular format: `<prefix><separator><key-1><separator>...<key-n>` where `prefix` and `separator` are the arguments passed to `load_from_environment`. `key-1` through `key-n` correspond to the keys of nested dictionaries. If `force_uppercase` is set, the environment variables will be converted to uppercase.
+`load_from_environment(proto, prefix='', force_uppercase=True, separator='_')`
+
+The environment variables that will be read are expected to have a particular format: 
+
+`<prefix><separator><key-1><separator>...<key-n>`
+
+where `prefix` and `separator` are the arguments passed to `load_from_environment`. `key-1` through `key-n` correspond to the keys of nested dictionaries. If `force_uppercase` is set, the environment variables will be converted to uppercase.
 
 For example, the following dictionary...
 
@@ -30,7 +36,8 @@ proto = {
 	'integer': int
 }
 ```
-...will be filled with the value from the following environment variables (asuming `prefix` is left empty, `separator` is `_` and `force_uppercase` is `True`):
+
+...will be filled with the value from the following environment variables (assuming `prefix` is left empty, `separator` is `_` and `force_uppercase` is `True`):
 
 * `ROOT_NESTED`
 * `VALUE`
@@ -44,9 +51,26 @@ Amet will attempt to convert values to Python primitive types. If the value for 
 
 For example, in the previous example, `root.nested` and `value` are assumed to be strings, however, `integer` will be converted to `int` as that is the value given to that key. If a number such as `0` or `1` had been set then the value of `integer` would have also been converted.
 
-### Dumping
+```python
+proto = {
+    'root': {
+        'nested': None    # Assumed to be a String
+    },
+    'value': str          # String value
+    'integer': int        # Will be converted to int
+    'some_boolean': True  # Will be converted to bool
+}
+```
 
-The `dump` function is also provided. this function will return a dictionary of the key-value pairs that should be set as environment variables. If we called `dump` with the dictionary in the previous example, the output would be:
+Possible values for `True` are `T`, `True`, `TRUE`, `true`, `Y`, `Yes`, `YES`, `yes` and `1`. The same gores for `False`.
+
+### Dumping - The `dump` function
+
+The `dump` function is also provided. 
+
+`dump(config, prefix='', force_uppercase=True, separator='_')`
+
+This function will return a dictionary of the key-value pairs that should be set as environment variables. If we called `dump` with the dictionary in the previous example, the output would be:
 
 ```python
 {
@@ -55,8 +79,6 @@ The `dump` function is also provided. this function will return a dictionary of 
 	'INTEGER': ...
 }
 ```
-
-`prefix`, `separator` and `force_uppercase` can also be passed.
 
 ### Exceptions
 
@@ -71,6 +93,8 @@ When a problem occurs loading or dumping a dictionary, errors may be raised.
 - [ ] Improve this README.
 - [ ] Add some useful examples for `dump` such as setting those variables in Heroku.
 - [ ] Add support for lists.
+- [ ] Add support for default values.
+- [ ] Allow converting to builtin type subclasses.
 - [ ] Check for possible name clashes when loading or dumping variables.
 - [ ] Improve unit tests.
 
