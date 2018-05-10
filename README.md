@@ -1,72 +1,76 @@
-# Amet 
+# Amet
 
 Amet is a Python 2/3 library to read and write complex configuration from and to environment variables.
 
 ## Motivation
 
-Some time ago I had to deploy an application to Heroku. This meant that I had to read the application's configuration from environment variables instead of the JSON files I had previously created. I wrote this library so that I could dump those configuration files into
-environment variables and then load them. 
+Some time ago I had to deploy an application to Heroku. This meant that I had to read the application's configuration from environment variables instead of the JSON files I was previously using for configuration. I wrote this library so that I could dump those configuration files into environment variables that I could easily read and assemble back into the original structure.
 
-This means that you do not need to give up the benefits of using a JSON file (or YML or other formats) while using environment variables for configuration.
+This means that you do not need to give up the benefits of using a structured JSON file while using environment variables for configuration.
 
 ## How to use
 
-Install the library with a simple `pip install amet`.
+First of all, install the library with a simple `pip install amet`.
 
 ### Loading - The `load_from_environment` function
 
-In order to load configuration values from environment variables, the `load_from_environment` function is provided. It expects a dictionary, `proto`, as its first argument and optionally two strings, `prefix` and `separator`, and a boolean value, `force_uppercase`. This function will iterate over `proto` and read environment variables that can be used to fill it.
+When loading a configuration object from the environment, the first thing that is needed is, of course, to define what needs to be read. The first thing we need to create is a dictionary to hold our configuration values as well as specify what type each value is. We will call this dictionary our prototype:
+
+```python
+CONFIGURATION_PROTOTYPE = {
+    'database': {
+        'hostname': str,
+        'port': int,
+        'username': str,
+        'password': str,
+        'use_ssl': bool
+    }
+}
+```
+
+In order to load configuration values from environment variables, the `load_from_environment` function is provided. This function will iterate over our prototype and read environment variables that can be used to fill it. The format of the environment variables that are read can be customized by setting the `prefix` and `separator` string values and the `force_uppercase` boolean value
 
 `load_from_environment(proto, prefix='', force_uppercase=True, separator='_')`
 
-The environment variables that will be read are expected to have a particular format: 
+The environment variables that will be read are expected to have a particular format:
 
 `<prefix><separator><key-1><separator>...<key-n>`
 
-where `prefix` and `separator` are the arguments passed to `load_from_environment`. `key-1` through `key-n` correspond to the keys of nested dictionaries. If `force_uppercase` is set, the environment variables will be converted to uppercase.
+where `key-1` through `key-n` correspond to the keys of nested dictionaries. If `force_uppercase` is set, the environment variables will be converted to uppercase.
 
-For example, the following dictionary...
+For example, out previously defined configuration prototype would be filled with the value from the following environment variables (assuming `prefix` is left empty, `separator` is `_` and `force_uppercase` is `True`):
 
-```python
-proto = {
-	'root': {
-		'nested': None
-	},
-	'value': None
-	'integer': int
-}
-```
+* `DATABASE_HOSTNAME`
+* `DATABASE_PORT`
+* `DATABASE_USERNAE`
+* `DATABASE_PASSWORD`
+* `DATABASE_USE_SSL`
 
-...will be filled with the value from the following environment variables (assuming `prefix` is left empty, `separator` is `_` and `force_uppercase` is `True`):
-
-* `ROOT_NESTED`
-* `VALUE`
-* `INTEGER`
-
-A new dictionary is returned, the input dictionary will be left untouched.
+`load_from_environment` will always return a new dictionary, the prototype will remain unchanged.
 
 ### Conversion of values
 
-Amet will attempt to convert values to Python primitive types. If the value for a given key is of type `int`, `float`, or `bool` (or the types themselves), upon reading the corresponding environment variables, Amet will attempt to convert those values. If the type of the value is `str` or `NoneType`the read value if left as is (which is `str`).
+Amet will attempt to convert values to Python primitive types. If the value for a given key is of type `int`, `float`, or `bool` (or the types themselves), upon reading the corresponding environment variables, Amet will attempt to parse those values. If the type of the value is `str` or `NoneType` the read value if left as is (which is `str`).
 
-For example, in the previous example, `root.nested` and `value` are assumed to be strings, however, `integer` will be converted to `int` as that is the value given to that key. If a number such as `0` or `1` had been set then the value of `integer` would have also been converted.
+In the previous example, `database.hostname` is assumed to be a string, however, `database.password` will be converted to `int` as that is the value given to that key. If a number such as `0` or `1` had been set then the value of `integer` would have also been converted.
 
 ```python
-proto = {
-    'root': {
-        'nested': None    # Assumed to be a String
-    },
-    'value': str          # String value
-    'integer': int        # Will be converted to int
-    'some_boolean': True  # Will be converted to bool
+CONFIGURATION_PROTOTYPE = {
+    'database': {
+        'hostname': str,    # Read as str
+        'port': int,        # Read as int
+        'username': None,   # Read as str
+        'password': None,   # Read as str
+        'use_ssl': bool     # Read as bool
+    }
 }
 ```
 
-Possible values for `True` are `T`, `True`, `TRUE`, `true`, `Y`, `Yes`, `YES`, `yes` and `1`. The same gores for `False`.
+Possible values for `True` are `T`, `True`, `TRUE`, `true`, `Y`, `Yes`, `YES`, `yes` and `1`. The same goes for `False`.
 
-### Dumping - The `dump` function
+### Writing - The `dump` function
 
-The `dump` function is also provided. 
+The `dump` function is also provided.
 
 `dump(config, prefix='', force_uppercase=True, separator='_')`
 
@@ -74,9 +78,11 @@ This function will return a dictionary of the key-value pairs that should be set
 
 ```python
 {
-	'ROOT_NESTED': ...,
-	'VALUE': ...,
-	'INTEGER': ...
+	`DATABASE_HOSTNAME`: ...
+	`DATABASE_PORT`: ...
+	`DATABASE_USERNAE`: ...
+	`DATABASE_PASSWORD`: ...
+	`DATABASE_USE_SSL`: ...
 }
 ```
 
@@ -90,11 +96,9 @@ When a problem occurs loading or dumping a dictionary, errors may be raised.
 
 ## TODO
 
-- [ ] Improve this README.
+- [x] Improve this README.
 - [ ] Add some useful examples for `dump` such as setting those variables in Heroku.
-- [ ] Add support for lists.
-- [ ] Add support for default values.
-- [ ] Allow converting to builtin type subclasses.
+- [ ] Add support for default values.spell
 - [ ] Check for possible name clashes when loading or dumping variables.
 - [ ] Improve unit tests.
 
